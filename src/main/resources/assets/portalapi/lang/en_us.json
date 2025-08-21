@@ -1,0 +1,5 @@
+{
+  "item.portalapi.portal_block": "Portal Block",
+  "text.autoconfig.portalapi.title": "Portal API",
+  "text.autoconfig.portalapi.option.portalRenderDistance": "Portal render distance"
+}

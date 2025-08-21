@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "linked=true": {
+      "model": "portalapi:block/linked_portal"
+    },
+    "linked=false": {
+      "model": "portalapi:block/unlinked_portal"
+    }
+  }
+}

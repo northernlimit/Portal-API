@@ -1,0 +1,38 @@
+{
+	"schemaVersion": 1,
+	"id": "portalapi",
+	"version": "${version}",
+	"name": "Portal API",
+	"description": "An attempt of single dimension see through portals",
+	"authors": [
+		"Nhappy"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "GPLv3",
+	"icon": "assets/portalapi/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"net.nhappy.portalapi.impl.PortalAPI"
+		],
+		"client": [
+			"net.nhappy.portalapi.impl.PortalAPIClient"
+		],
+		"modmenu": [
+			"net.nhappy.portalapi.impl.config.PortalAPIModMenu"
+		]
+	},
+	"mixins": [
+		"portalapi.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.16.14",
+		"minecraft": "~1.21.3",
+		"java": ">=21",
+		"fabric-api": "*"
+	},
+	"accessWidener": "portalapi.accesswidener"
+}
