@@ -14,7 +14,8 @@ import org.lwjgl.opengl.GL30;
 @Environment(EnvType.CLIENT)
 public class StencilFramebuffer extends Framebuffer {
 
-    private int depthStencilTex = -1;
+    private int depthTex = -1;
+    private int stencilRbo = -1;
 
     public StencilFramebuffer() {
         super(true);
@@ -48,15 +49,15 @@ public class StencilFramebuffer extends Framebuffer {
         // === Create color texture ===
         this.colorAttachment = TextureUtil.generateTextureId();
 
-        // === Create depth-stencil texture ===
-        this.depthStencilTex = TextureUtil.generateTextureId();
-        GlStateManager._bindTexture(this.depthStencilTex);
+        // === Create depth texture (separate) ===
+        this.depthTex = TextureUtil.generateTextureId();
+        GlStateManager._bindTexture(this.depthTex);
         GlStateManager._texParameter(GlConst.GL_TEXTURE_2D, GlConst.GL_TEXTURE_MIN_FILTER, GlConst.GL_NEAREST);
         GlStateManager._texParameter(GlConst.GL_TEXTURE_2D, GlConst.GL_TEXTURE_MAG_FILTER, GlConst.GL_NEAREST);
         GlStateManager._texParameter(GlConst.GL_TEXTURE_2D, GlConst.GL_TEXTURE_COMPARE_MODE, 0);
         GlStateManager._texParameter(GlConst.GL_TEXTURE_2D, GlConst.GL_TEXTURE_WRAP_S, GlConst.GL_CLAMP_TO_EDGE);
         GlStateManager._texParameter(GlConst.GL_TEXTURE_2D, GlConst.GL_TEXTURE_WRAP_T, GlConst.GL_CLAMP_TO_EDGE);
-        GlStateManager._texImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_DEPTH24_STENCIL8, width, height, 0, GL30.GL_DEPTH_STENCIL, GL30.GL_UNSIGNED_INT_24_8, null);
+        GlStateManager._texImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_DEPTH_COMPONENT24, width, height, 0, GL11.GL_DEPTH_COMPONENT, GL11.GL_UNSIGNED_INT, null);
 
         this.texFilter = GlConst.GL_NEAREST;
         GlStateManager._bindTexture(this.colorAttachment);
@@ -69,11 +70,17 @@ public class StencilFramebuffer extends Framebuffer {
         GlStateManager._texParameter(GlConst.GL_TEXTURE_2D, GlConst.GL_TEXTURE_WRAP_T, GlConst.GL_CLAMP_TO_EDGE);
         GlStateManager._texImage2D(GlConst.GL_TEXTURE_2D, 0, GlConst.GL_RGBA8, width, height, 0, GlConst.GL_RGBA, GlConst.GL_UNSIGNED_BYTE, null);
 
+        // === Create stencil renderbuffer (separate) ===
+        this.stencilRbo = GL30.glGenRenderbuffers();
+        GL30.glBindRenderbuffer(GL30.GL_RENDERBUFFER, this.stencilRbo);
+        GL30.glRenderbufferStorage(GL30.GL_RENDERBUFFER, GL30.GL_STENCIL_INDEX8, width, height);
+        GL30.glBindRenderbuffer(GL30.GL_RENDERBUFFER, 0);
+
         // === Attach textures to framebuffer ===
         GlStateManager._glBindFramebuffer(GlConst.GL_FRAMEBUFFER, this.fbo);
         GlStateManager._glFramebufferTexture2D(GlConst.GL_FRAMEBUFFER, GlConst.GL_COLOR_ATTACHMENT0, GlConst.GL_TEXTURE_2D, this.colorAttachment, 0);
-        GlStateManager._glFramebufferTexture2D(GlConst.GL_FRAMEBUFFER, GL30.GL_DEPTH_STENCIL_ATTACHMENT, GlConst.GL_TEXTURE_2D, this.depthStencilTex, 0);
-        //GlStateManager._glFramebufferTexture2D(GlConst.GL_FRAMEBUFFER, GL30.GL_STENCIL_ATTACHMENT, GlConst.GL_TEXTURE_2D, this.depthStencilTex, 0);
+        GlStateManager._glFramebufferTexture2D(GlConst.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, GlConst.GL_TEXTURE_2D, this.depthTex, 0);
+        GL30.glFramebufferRenderbuffer(GlConst.GL_FRAMEBUFFER, GL30.GL_STENCIL_ATTACHMENT, GL30.GL_RENDERBUFFER, this.stencilRbo);
 
         this.checkFramebufferStatus();
         this.clear();
@@ -95,15 +102,19 @@ public class StencilFramebuffer extends Framebuffer {
     @Override
     public void delete() {
         super.delete();
-        if (this.depthStencilTex != -1) {
-            TextureUtil.releaseTextureId(this.depthStencilTex);
-            this.depthStencilTex = -1;
+        if (this.depthTex != -1) {
+            TextureUtil.releaseTextureId(this.depthTex);
+            this.depthTex = -1;
+        }
+        if (this.stencilRbo != -1) {
+            GL30.glDeleteRenderbuffers(this.stencilRbo);
+            this.stencilRbo = -1;
         }
     }
 
     @Override
     public int getDepthAttachment() {
-        return this.depthStencilTex;
+        return this.depthTex;
     }
 
 }
